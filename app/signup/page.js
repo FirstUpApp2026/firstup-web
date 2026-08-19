@@ -1,0 +1,55 @@
+'use client'
+
+import { useState } from 'react'
+import { supabase } from '../../lib/supabase'
+
+export default function SignupPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [message, setMessage] = useState('')
+
+  async function handleSignup(e) {
+    e.preventDefault()
+    setMessage('')
+
+    const { error } = await supabase.auth.signUp({ email, password })
+
+    if (error) {
+      setMessage(error.message)
+    } else {
+      setMessage('Check your email to confirm your account.')
+    }
+  }
+
+  return (
+    <div style={{ maxWidth: 400, margin: '80px auto', padding: 20 }}>
+      <h1>Sign up for FirstUp</h1>
+      <form onSubmit={handleSignup}>
+        <div style={{ marginBottom: 12 }}>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            style={{ width: '100%', padding: 8 }}
+          />
+        </div>
+        <div style={{ marginBottom: 12 }}>
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            style={{ width: '100%', padding: 8 }}
+          />
+        </div>
+        <button type="submit" style={{ width: '100%', padding: 10 }}>
+          Sign Up
+        </button>
+      </form>
+      {message && <p style={{ marginTop: 12 }}>{message}</p>}
+    </div>
+  )
+}
