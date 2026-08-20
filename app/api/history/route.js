@@ -3,15 +3,22 @@ import { supabaseAdmin } from '../../../lib/supabaseAdmin'
 export async function GET(request) {
   const { searchParams } = new URL(request.url)
   const userId = searchParams.get('user_id')
+    const leagueId = searchParams.get('league_id')
 
   if (!userId) {
     return Response.json({ error: 'user_id is required' }, { status: 400 })
   }
 
-  const { data: leagues, error: leaguesError } = await supabaseAdmin
+    let leaguesQuery = supabaseAdmin
     .from('leagues')
     .select('id, name')
     .eq('user_id', userId)
+
+  if (leagueId) {
+    leaguesQuery = leaguesQuery.eq('id', leagueId)
+  }
+
+  const { data: leagues, error: leaguesError } = await leaguesQuery
 
   if (leaguesError) {
     return Response.json({ error: leaguesError.message }, { status: 500 })
