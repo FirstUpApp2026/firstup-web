@@ -19,6 +19,7 @@ export default function LeagueQueuePage() {
   const [loading, setLoading] = useState(true)
   const [newName, setNewName] = useState('')
   const [newPos, setNewPos] = useState('')
+    const [newBid, setNewBid] = useState('')
   const [dragIndex, setDragIndex] = useState(null)
 
   async function loadData() {
@@ -58,15 +59,18 @@ export default function LeagueQueuePage() {
 
     const nextRank = queue.length + 1
     const tempId = `temp-${Date.now()}`
+    const bidValue = newBid.trim() ? Number(newBid) : null
     const optimisticEntry = {
       id: tempId,
       player_name: newName,
       position: newPos,
       rank: nextRank,
+      bid_amount: bidValue,
     }
     setQueue([...queue, optimisticEntry])
     setNewName('')
     setNewPos('')
+    setNewBid('')
 
     const { data } = await supabase
       .from('queue_entries')
@@ -76,6 +80,7 @@ export default function LeagueQueuePage() {
         player_name: optimisticEntry.player_name,
         position: optimisticEntry.position,
         rank: nextRank,
+        bid_amount: bidValue,
         status: 'pending',
       })
       .select()
@@ -237,10 +242,10 @@ export default function LeagueQueuePage() {
             style={inputStyle}
           />
           <input
-            placeholder="Pos"
-            value={newPos}
-            onChange={(e) => setNewPos(e.target.value)}
-            style={{ ...inputStyle, width: 60 }}
+            placeholder="Bid ($)"
+            value={newBid}
+            onChange={(e) => setNewBid(e.target.value)}
+            style={{ ...inputStyle, width: 70 }}
           />
           <button
             type="submit"
