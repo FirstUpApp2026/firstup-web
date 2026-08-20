@@ -59,6 +59,28 @@ async function runWaiversForLeague(leagueId) {
       console.error('transaction_attempts insert failed:', insertError.message)
     }
 
+    const team = teams.find(function (t) { return t.id === entry.team_id })
+    const notificationMessage = claimResult.success
+      ? 'Your claim for ' + entry.player_name + ' was successful!'
+      : 'Your claim for ' + entry.player_name + ' failed.'
+
+    if (team) {
+      const { data: leagueRow } = await supabaseAdmin
+        .from('leagues')
+        .select('user_id')
+        .eq('id', leagueId)
+        .single()
+
+      if (leagueRow) {
+        await supabaseAdmin
+          .from('notifications')
+          .insert({
+            user_id: leagueRow.user_id,
+            message: notificationMessage,
+          })
+      }
+    }
+
     results.push({
       player_name: entry.player_name,
       rank: entry.rank,
