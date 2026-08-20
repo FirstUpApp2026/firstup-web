@@ -34,6 +34,11 @@ export default function HomePage() {
         Connect Yahoo Account
       </button>
     </a>
+    <a href="/leagues">
+  <button style={{ padding: 10, marginTop: 12, marginRight: 8 }}>
+    My Leagues
+  </button>
+</a>
     <button onClick={handleLogout} style={{ padding: 10, marginTop: 12 }}>
       Log Out
     </button>
