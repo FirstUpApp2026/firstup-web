@@ -6,6 +6,17 @@ async function mockSubmitClaim(entry) {
 }
 
 async function runWaiversForLeague(leagueId) {
+  const { data: waiverRun } = await supabaseAdmin
+    .from('waiver_runs')
+    .insert({
+      league_id: leagueId,
+      scheduled_time: new Date().toISOString(),
+      executed_at: new Date().toISOString(),
+      status: 'running',
+    })
+    .select()
+    .single()
+
   const { data: teams } = await supabaseAdmin
     .from('teams')
     .select('id')
@@ -31,6 +42,23 @@ async function runWaiversForLeague(leagueId) {
       .update({ status: newStatus })
       .eq('id', entry.id)
 
+    const transactionResult = claimResult.success ? 'success' : 'fail'
+
+    const { error: insertError } = await supabaseAdmin
+      .from('transaction_attempts')
+      .insert({
+        queue_entry_id: entry.id,
+        waiver_run_id: waiverRun.id,
+        attempted_at: new Date().toISOString(),
+        result: transactionResult,
+        yahoo_response: null,
+        error_message: claimResult.success ? null : 'mock claim failed',
+      })
+
+    if (insertError) {
+      console.error('transaction_attempts insert failed:', insertError.message)
+    }
+
     results.push({
       player_name: entry.player_name,
       rank: entry.rank,
@@ -42,10 +70,20 @@ async function runWaiversForLeague(leagueId) {
     }
   }
 
+  await supabaseAdmin
+    .from('waiver_runs')
+    .update({ status: 'completed' })
+    .eq('id', waiverRun.id)
+
   return results
 }
 
 export async function GET(request) {
+  const authHeader = request.headers.get('authorization')
+  if (authHeader !== 'Bearer ' + process.env.CRON_SECRET) {
+    return Response.json({ error: 'unauthorized' }, { status: 401 })
+  }
+
   const now = new Date()
   const currentTime = now.toTimeString().slice(0, 5)
 
