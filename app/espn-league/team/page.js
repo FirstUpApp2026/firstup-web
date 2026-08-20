@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
 
@@ -34,6 +34,14 @@ const injuryAbbrev = {
 }
 
 export default function EspnTeamPage() {
+  return (
+    <Suspense fallback={<div style={pageStyle} />}>
+      <EspnTeamPageInner />
+    </Suspense>
+  )
+}
+
+function EspnTeamPageInner() {
   const searchParams = useSearchParams()
   const leagueId = searchParams.get('league_id')
   const teamId = searchParams.get('team_id')
