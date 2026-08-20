@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/run-waivers",
-      "schedule": "* * * * *"
+      "schedule": "0 3 * * *"
     }
   ]
 }
