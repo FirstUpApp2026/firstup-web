@@ -1,106 +1,132 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { supabase } from '../../lib/supabase'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Header from '../../components/Header';
+import {
+  pageStyle,
+  cardStyle,
+  inputStyle,
+  buttonPrimaryStyle,
+} from '../../lib/theme';
+import { supabase } from '../../lib/supabase';
 
 export default function ConnectEspnPage() {
-  const [swid, setSwid] = useState('')
-  const [espnS2, setEspnS2] = useState('')
-  const [message, setMessage] = useState('')
-  const [userId, setUserId] = useState(null)
-  const router = useRouter()
+  const router = useRouter();
+  const [swid, setSwid] = useState('');
+  const [espnS2, setEspnS2] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) setUserId(data.user.id)
-    })
-  }, [])
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setError('');
 
-  async function handleConnect(e) {
-    e.preventDefault()
-    if (!userId) return
-    setMessage('')
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    const { error } = await supabase.from('espn_connections').upsert({
-      user_id: userId,
-      swid: swid.trim(),
-      espn_s2: espnS2.trim(),
-    })
-
-    if (error) {
-      setMessage('Something went wrong: ' + error.message)
-    } else {
-      setMessage('ESPN account connected.')
+    if (!user) {
+      setError('You must be logged in.');
+      setSaving(false);
+      return;
     }
-  }
+
+    const { error: upsertError } = await supabase
+      .from('espn_connections')
+      .upsert(
+        {
+          user_id: user.id,
+          swid,
+          espn_s2: espnS2,
+        },
+        { onConflict: 'user_id' }
+      );
+
+    setSaving(false);
+
+    if (upsertError) {
+      setError('Something went wrong saving your connection.');
+      return;
+    }
+
+    router.push('/');
+  };
 
   return (
-    <div style={{ background: '#0B0F14', minHeight: '100vh', color: '#EDEFF2', fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ maxWidth: 500, margin: '0 auto', padding: '40px 20px' }}>
-        <a href="/" style={{ color: '#8A94A3', fontSize: 13, textDecoration: 'none' }}>
-          Back home
-        </a>
-        <h1 style={{ marginTop: 10 }}>Connect ESPN</h1>
-        <p style={{ color: '#8A94A3', fontSize: 14, lineHeight: 1.5 }}>
-          ESPN does not support a login button here. Instead, you will copy two values from
-          your own browser after logging into ESPN normally. These values stay private to
-          your account and are only used to read your leagues.
+    <div style={pageStyle}>
+      <Header />
+
+      <div style={{ ...cardStyle, maxWidth: 480, width: '100%' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            marginBottom: 8,
+          }}
+        >
+          <h2 style={{ margin: 0 }}>Connect ESPN</h2>
+        </div>
+
+        <p style={{ color: '#9ca3af', lineHeight: 1.5, marginBottom: 20 }}>
+          ESPN does not support a login button here. Instead, you will copy
+          two values from your own browser after logging into ESPN normally.
+          These values stay private to your account and are only used to
+          read your leagues.
         </p>
 
-        <ol style={{ color: '#8A94A3', fontSize: 14, lineHeight: 1.8, paddingLeft: 20 }}>
+        <ol
+          style={{
+            color: '#9ca3af',
+            lineHeight: 1.8,
+            marginBottom: 24,
+            paddingLeft: 20,
+          }}
+        >
           <li>Log into fantasy.espn.com in this same browser</li>
-          <li>Open your browser&apos;s developer tools and go to the Cookies section</li>
+          <li>Open your browser's developer tools and go to the Cookies section</li>
           <li>Find the cookie named <code>SWID</code> and copy its value</li>
           <li>Find the cookie named <code>espn_s2</code> and copy its value</li>
         </ol>
 
-        <form onSubmit={handleConnect} style={{ marginTop: 20 }}>
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ fontSize: 13, color: '#8A94A3' }}>SWID</label>
-            <input
-              value={swid}
-              onChange={(e) => setSwid(e.target.value)}
-              required
-              style={inputStyle}
-            />
-          </div>
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ fontSize: 13, color: '#8A94A3' }}>espn_s2</label>
-            <input
-              value={espnS2}
-              onChange={(e) => setEspnS2(e.target.value)}
-              required
-              style={inputStyle}
-            />
-          </div>
+        <form onSubmit={handleSave}>
+          <label style={{ display: 'block', marginBottom: 6, color: '#e5e7eb' }}>
+            SWID
+          </label>
+          <input
+            type="text"
+            value={swid}
+            onChange={(e) => setSwid(e.target.value)}
+            style={{ ...inputStyle, marginBottom: 16 }}
+            required
+          />
+
+          <label style={{ display: 'block', marginBottom: 6, color: '#e5e7eb' }}>
+            espn_s2
+          </label>
+          <input
+            type="text"
+            value={espnS2}
+            onChange={(e) => setEspnS2(e.target.value)}
+            style={{ ...inputStyle, marginBottom: 16 }}
+            required
+          />
+
+          {error && (
+            <p style={{ color: '#f87171', marginBottom: 16 }}>{error}</p>
+          )}
+
           <button
             type="submit"
-            style={{
-              background: '#1B232D',
-              border: '1px solid #F4B740',
-              color: '#F4B740',
-              borderRadius: 6,
-              padding: '10px 16px',
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
+            disabled={saving}
+            style={{ ...buttonPrimaryStyle, width: '100%' }}
           >
-            Save Connection
+            {saving ? 'Saving...' : 'Save Connection'}
           </button>
         </form>
-        {message && <p style={{ marginTop: 12 }}>{message}</p>}
       </div>
     </div>
-  )
-}
-
-const inputStyle = {
-  width: '100%',
-  padding: 8,
-  marginTop: 4,
-  background: '#141B24',
-  border: '1px solid #263140',
-  borderRadius: 6,
-  color: '#EDEFF2',
+  );
 }
