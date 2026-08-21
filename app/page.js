@@ -149,12 +149,14 @@ export default function HomePage() {
             </div>
           </>
         ) : (
-          <>
-            <Logo />
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <Logo />
+            </div>
             <p style={{ color: colors.textMuted, marginTop: -20, marginBottom: 24 }}>
               Automatic waiver claims, right when they clear.
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 260 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 260, margin: '0 auto' }}>
               <a href="/login" style={{ textDecoration: 'none' }}>
                 <button style={{ ...buttonPrimaryStyle, width: '100%' }}>
                   Log In
@@ -166,7 +168,7 @@ export default function HomePage() {
                 </button>
               </a>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>
