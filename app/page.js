@@ -143,8 +143,18 @@ export default function HomePage() {
                   Connect ESPN Account
                 </button>
               </a>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={colors.textMuted} strokeWidth="1.8" style={{ flexShrink: 0, marginLeft: 10 }}>
+                  <path d="M6 4v9a4 4 0 0 0 4 4h8M14 13l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <a href="/add-espn-league" style={{ textDecoration: 'none', flex: 1 }}>
+                  <button style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: 13, color: colors.textMuted, background: 'transparent', border: '1px dashed ' + colors.border, borderRadius: 6, cursor: 'pointer' }}>
+                    Add ESPN League
+                  </button>
+                </a>
+              </div>
               <button style={{ ...buttonSecondaryStyle, width: '100%', opacity: 0.5, cursor: 'not-allowed' }} disabled>
-                Connect sleeper Account (coming soon)
+                Connect sleeper Account (Coming Soon)
               </button>
             </div>
           </>
@@ -154,7 +164,7 @@ export default function HomePage() {
               <Logo />
             </div>
             <p style={{ color: colors.textMuted, marginTop: -20, marginBottom: 24 }}>
-              Automatic waiver claims, right when they clear.
+              Sleep in. We'll grab the free agent.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 260, margin: '0 auto' }}>
               <a href="/login" style={{ textDecoration: 'none' }}>
