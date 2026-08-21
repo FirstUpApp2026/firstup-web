@@ -29,11 +29,14 @@ export default function LoginPage() {
   return (
     <div style={pageStyle}>
       <div style={{ ...containerStyle, maxWidth: 400 }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: -20 }}>
           <a href="/" style={{ textDecoration: 'none' }}>
             <Logo />
           </a>
         </div>
+        <p style={{ textAlign: 'center', color: colors.textMuted, marginTop: 0, marginBottom: 24 }}>
+          Sleep in. We'll grab the free agent.
+        </p>
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <input
             type="email"
