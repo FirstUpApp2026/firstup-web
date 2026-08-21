@@ -29,7 +29,11 @@ export default function LoginPage() {
   return (
     <div style={pageStyle}>
       <div style={{ ...containerStyle, maxWidth: 400 }}>
-        <Logo />
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
+          <a href="/" style={{ textDecoration: 'none' }}>
+            <Logo />
+          </a>
+        </div>
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <input
             type="email"

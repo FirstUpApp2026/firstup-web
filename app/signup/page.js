@@ -27,7 +27,11 @@ export default function SignupPage() {
   return (
     <div style={pageStyle}>
       <div style={{ ...containerStyle, maxWidth: 400 }}>
-        <Logo />
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
+          <a href="/" style={{ textDecoration: 'none' }}>
+            <Logo />
+          </a>
+        </div>
         <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <input
             type="email"
