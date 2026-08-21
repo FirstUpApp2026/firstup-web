@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
-import { pageStyle, containerStyle, backLinkStyle, sectionHeaderStyle, positionColors } from '../../../lib/theme'
+import { pageStyle, containerStyle, sectionHeaderStyle, positionColors, colors, inputStyle, buttonPrimaryStyle, buttonGhostStyle, formatSport } from '../../../lib/theme'
+import Header from '../../../components/Header'
+import SportIcon from '../../../components/SportIcon'
 
 export default function LeagueQueuePage() {
   const { id } = useParams()
@@ -15,8 +17,12 @@ export default function LeagueQueuePage() {
   const [newPos, setNewPos] = useState('')
   const [newBid, setNewBid] = useState('')
   const [dragIndex, setDragIndex] = useState(null)
+  const [user, setUser] = useState(null)
 
   async function loadData() {
+    const { data: userData } = await supabase.auth.getUser()
+    setUser(userData.user)
+
     const { data: leagueData } = await supabase
       .from('leagues')
       .select('*')
@@ -51,17 +57,26 @@ export default function LeagueQueuePage() {
     e.preventDefault()
     if (!newName.trim() || !team) return
 
-    const nextRank = queue.length + 1
     const tempId = 'temp-' + Date.now()
     const bidValue = newBid.trim() ? Number(newBid) : null
+
+    let insertIndex = queue.length
+    if (bidValue !== null) {
+      insertIndex = queue.findIndex(function (entry) {
+        return entry.bid_amount === null || entry.bid_amount === undefined || bidValue > entry.bid_amount
+      })
+      if (insertIndex === -1) insertIndex = queue.length
+    }
+
     const optimisticEntry = {
       id: tempId,
       player_name: newName,
       position: newPos,
-      rank: nextRank,
       bid_amount: bidValue,
     }
-    setQueue([...queue, optimisticEntry])
+    const newQueue = [...queue]
+    newQueue.splice(insertIndex, 0, optimisticEntry)
+    setQueue(newQueue.map(function (entry, index) { return { ...entry, rank: index + 1 } }))
     setNewName('')
     setNewPos('')
     setNewBid('')
@@ -73,7 +88,7 @@ export default function LeagueQueuePage() {
         player_yahoo_id: 'manual-' + Date.now(),
         player_name: optimisticEntry.player_name,
         position: optimisticEntry.position,
-        rank: nextRank,
+        rank: insertIndex + 1,
         bid_amount: bidValue,
         status: 'pending',
       })
@@ -81,9 +96,10 @@ export default function LeagueQueuePage() {
       .single()
 
     if (data) {
-      setQueue(function (current) {
-        return current.map(function (q) { return q.id === tempId ? data : q })
-      })
+      const finalQueue = newQueue.map(function (entry) { return entry.id === tempId ? data : entry })
+      const rankedFinal = finalQueue.map(function (entry, index) { return { ...entry, rank: index + 1 } })
+      setQueue(rankedFinal)
+      saveOrder(rankedFinal)
     }
   }
 
@@ -146,11 +162,17 @@ export default function LeagueQueuePage() {
   return (
     <div style={pageStyle}>
       <div style={containerStyle}>
-        <a href="/leagues" style={backLinkStyle}>
-          Back to leagues
-        </a>
-        <h1 style={{ marginTop: 10, marginBottom: 4 }}>{league.name}</h1>
-        <p style={{ color: '#8A94A3', margin: 0 }}>{league.sport} - Team: {team && team.team_name}</p>
+        <Header user={user} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 20, marginBottom: 6 }}>
+          <SportIcon sport={formatSport(league.sport)} />
+          <span style={{ fontSize: 13, fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase', color: colors.textSecondary }}>
+            {formatSport(league.sport)}
+          </span>
+        </div>
+        <h1 style={{ margin: 0, marginBottom: 2, fontSize: 24 }}>{team ? team.team_name : league.name}</h1>
+        {team && (
+          <p style={{ color: colors.textMuted, margin: 0, fontSize: 14 }}>{league.name}</p>
+        )}
 
         <h2 style={sectionHeaderStyle}>Priority Queue</h2>
         <p style={{ fontSize: 12, color: '#5A6472', marginTop: -6, marginBottom: 12 }}>
@@ -158,7 +180,7 @@ export default function LeagueQueuePage() {
         </p>
 
         {queue.length === 0 ? (
-          <div style={{ border: '1px dashed #263140', borderRadius: 10, padding: 24, textAlign: 'center', color: '#5A6472' }}>
+          <div style={{ border: '1px dashed ' + colors.border, borderRadius: 10, padding: 24, textAlign: 'center', color: colors.textFaint }}>
             No one queued yet.
           </div>
         ) : (
@@ -183,7 +205,7 @@ export default function LeagueQueuePage() {
                     opacity: dragIndex === i ? 0.5 : 1,
                   }}
                 >
-                  <span style={{ color: '#3E4A59', fontSize: 14 }}>drag</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '3px 3px', gridTemplateRows: '3px 3px', gap: 3, flexShrink: 0 }}><div style={{ width: 3, height: 3, borderRadius: '50%', background: colors.textFaint }} /><div style={{ width: 3, height: 3, borderRadius: '50%', background: colors.textFaint }} /><div style={{ width: 3, height: 3, borderRadius: '50%', background: colors.textFaint }} /><div style={{ width: 3, height: 3, borderRadius: '50%', background: colors.textFaint }} /></div>
                   <div
                     style={{
                       width: 24,
@@ -223,9 +245,11 @@ export default function LeagueQueuePage() {
                       )}
                     </div>
                   </div>
-                  <button onClick={function () { move(i, -1) }} disabled={i === 0} style={btnStyle}>Up</button>
-                  <button onClick={function () { move(i, 1) }} disabled={i === queue.length - 1} style={btnStyle}>Down</button>
-                  <button onClick={function () { removePlayer(entry.id) }} style={{ ...btnStyle, color: '#F4776A' }}>Remove</button>
+                  <button onClick={function () { removePlayer(entry.id) }} style={{ ...buttonGhostStyle, color: colors.danger, display: 'flex', alignItems: 'center' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                      <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
                 </div>
               )
             })}
@@ -252,7 +276,7 @@ export default function LeagueQueuePage() {
             onChange={function (e) { setNewBid(e.target.value) }}
             style={{ ...inputStyle, width: 70 }}
           />
-          <button type="submit" style={buttonPrimaryStyle}>
+          <button type="submit" style={{ ...buttonPrimaryStyle, padding: '8px 16px' }}>
             Add
           </button>
         </form>
@@ -261,30 +285,3 @@ export default function LeagueQueuePage() {
   )
 }
 
-const btnStyle = {
-  background: 'transparent',
-  border: 'none',
-  color: '#5A6472',
-  cursor: 'pointer',
-  padding: 4,
-  fontSize: 14,
-}
-
-const inputStyle = {
-  flex: 1,
-  padding: 8,
-  background: '#141B24',
-  border: '1px solid #263140',
-  borderRadius: 6,
-  color: '#EDEFF2',
-}
-
-const buttonPrimaryStyle = {
-  background: '#1B232D',
-  border: '1px solid #F4B740',
-  color: '#F4B740',
-  borderRadius: 6,
-  padding: '8px 14px',
-  fontWeight: 600,
-  cursor: 'pointer',
-}
