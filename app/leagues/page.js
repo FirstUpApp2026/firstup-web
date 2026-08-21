@@ -2,6 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import {
+  pageStyle,
+  containerStyle,
+  backLinkStyle,
+  cardStyle,
+} from '../../lib/theme'
 
 export default function LeaguesPage() {
   const [leagues, setLeagues] = useState([])
@@ -27,28 +33,50 @@ export default function LeaguesPage() {
     loadLeagues()
   }, [])
 
-  if (loading) return <p style={{ padding: 40 }}>Loading...</p>
+  if (loading) {
+    return (
+      <div style={pageStyle}>
+        <p style={{ padding: 40 }}>Loading...</p>
+      </div>
+    )
+  }
 
   return (
-    <div style={{ maxWidth: 600, margin: '80px auto', padding: 20 }}>
-      <h1>Your Leagues</h1>
-      {leagues.length === 0 ? (
-        <p>No leagues yet.</p>
-      ) : (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          {leagues.map((league) => (
-            <li key={league.id} style={{ padding: '12px 0', borderBottom: '1px solid #333' }}>
-              <a href={`/leagues/${league.id}`} style={{ fontSize: 18, fontWeight: 600 }}>
-                {league.name}
-              </a>
-              <div style={{ color: '#888', fontSize: 14 }}>{league.sport}</div>
-            </li>
-          ))}
-        </ul>
-      )}
-      <a href="/" style={{ display: 'inline-block', marginTop: 20 }}>
-        ← Back home
-      </a>
+    <div style={pageStyle}>
+      <div style={containerStyle}>
+        <a href="/" style={backLinkStyle}>
+          Back home
+        </a>
+        <h1 style={{ marginTop: 10, marginBottom: 4 }}>Your Leagues</h1>
+
+        {leagues.length === 0 ? (
+          <div
+            style={{
+              border: '1px dashed #263140',
+              borderRadius: 10,
+              padding: 24,
+              textAlign: 'center',
+              color: '#5A6472',
+              marginTop: 20,
+            }}
+          >
+            No leagues yet.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 }}>
+            {leagues.map(function (league) {
+              return (
+                <a key={league.id} href={'/leagues/' + league.id} style={{ ...cardStyle, textDecoration: 'none', color: 'inherit', display: 'block' }}>
+                  <div style={{ fontWeight: 600, fontSize: 16 }}>{league.name}</div>
+                  <div style={{ color: '#8A94A3', fontSize: 13, marginTop: 2 }}>
+                    {league.sport} - {league.platform}
+                  </div>
+                </a>
+              )
+            })}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
