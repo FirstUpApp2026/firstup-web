@@ -21,6 +21,12 @@ export default function LeagueQueuePage() {
   const [searchResults, setSearchResults] = useState([])
   const [selectedPlayer, setSelectedPlayer] = useState(null)
   const [freeAgents, setFreeAgents] = useState([])
+  const [toastVisible, setToastVisible] = useState(false)
+
+  function showSavedToast() {
+    setToastVisible(true)
+    setTimeout(function () { setToastVisible(false) }, 2000)
+  }
   const [user, setUser] = useState(null)
 
   async function loadData() {
@@ -69,17 +75,23 @@ export default function LeagueQueuePage() {
     loadFreeAgents()
   }, [league])
 
-  function handleSearchChange(value) {
+  async function handleSearchChange(value) {
     setSearchQuery(value)
     setSelectedPlayer(null)
     if (!value.trim()) {
       setSearchResults([])
       return
     }
-    const matches = freeAgents.filter(function (p) {
-      return p.name.toLowerCase().includes(value.toLowerCase())
-    }).slice(0, 6)
-    setSearchResults(matches)
+    if (league.platform === 'sleeper') {
+      const res = await fetch('/api/sleeper/free-agents?sleeper_league_id=' + league.yahoo_league_key + '&q=' + encodeURIComponent(value))
+      const json = await res.json()
+      setSearchResults(json.players || [])
+    } else {
+      const matches = freeAgents.filter(function (p) {
+        return p.name.toLowerCase().includes(value.toLowerCase())
+      }).slice(0, 6)
+      setSearchResults(matches)
+    }
   }
 
   function selectPlayer(player) {
@@ -139,18 +151,22 @@ export default function LeagueQueuePage() {
       const rankedFinal = finalQueue.map(function (entry, index) { return { ...entry, rank: index + 1 } })
       setQueue(rankedFinal)
       saveOrder(rankedFinal)
+      showSavedToast()
     }
   }
 
   async function removePlayer(entryId) {
     setQueue(function (current) { return current.filter(function (q) { return q.id !== entryId }) })
     await supabase.from('queue_entries').delete().eq('id', entryId)
+    showSavedToast()
   }
 
   async function saveOrder(orderedQueue) {
     const updates = orderedQueue
       .map(function (entry, index) { return { entry: entry, newRank: index + 1 } })
       .filter(function (item) { return item.entry.rank !== item.newRank })
+
+    if (updates.length === 0) return
 
     await Promise.all(
       updates.map(function (item) {
@@ -159,6 +175,7 @@ export default function LeagueQueuePage() {
     )
 
     setQueue(orderedQueue.map(function (entry, index) { return { ...entry, rank: index + 1 } }))
+    showSavedToast()
   }
 
   function move(index, direction) {
@@ -315,7 +332,7 @@ export default function LeagueQueuePage() {
               </div>
             ) : (
               <input
-                placeholder={league.platform === 'espn' ? 'Search player name' : 'Player name'}
+                placeholder={league.platform === 'espn' || league.platform === 'sleeper' ? 'Search player name' : 'Player name'}
                 value={searchQuery}
                 onChange={function (e) { handleSearchChange(e.target.value) }}
                 style={{ ...inputStyle, width: '100%', boxSizing: 'border-box', textTransform: 'capitalize' }}
@@ -359,7 +376,30 @@ export default function LeagueQueuePage() {
         </form>
 
       </div>
+      {toastVisible && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 24,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            background: '#1B2E22',
+            border: '1px solid #2E5A3E',
+            borderRadius: 8,
+            padding: '10px 16px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+            zIndex: 50,
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ADE80" strokeWidth="2.5">
+            <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span style={{ fontSize: 13, color: '#4ADE80', fontWeight: 500 }}>Saved</span>
+        </div>
+      )}
     </div>
   )
 }
-
