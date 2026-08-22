@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '../../components/Header';
 import {
@@ -17,6 +17,13 @@ export default function ConnectEspnPage() {
   const [espnS2, setEspnS2] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+    });
+  }, []);
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -54,12 +61,13 @@ export default function ConnectEspnPage() {
     router.push('/');
   };
 
-  return (
+   return (
     <div style={pageStyle}>
-      <Header />
+      <div style={{ maxWidth: 480, width: '100%' }}>
+        <Header user={user} />
 
-      <div style={{ ...cardStyle, maxWidth: 480, width: '100%' }}>
-        <div
+        <div style={{ ...cardStyle, width: '100%' }}>
+          <div
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -126,6 +134,7 @@ export default function ConnectEspnPage() {
             {saving ? 'Saving...' : 'Save Connection'}
           </button>
         </form>
+        </div>
       </div>
     </div>
   );

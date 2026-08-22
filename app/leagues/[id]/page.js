@@ -257,12 +257,12 @@ export default function LeagueQueuePage() {
         )}
 
         <h2 style={sectionHeaderStyle}>Add a player</h2>
-        <form onSubmit={addPlayer} style={{ display: 'flex', gap: 8 }}>
+        <form onSubmit={addPlayer} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <input
             placeholder="Player name"
             value={newName}
             onChange={function (e) { setNewName(e.target.value) }}
-            style={inputStyle}
+            style={{ ...inputStyle, flex: '1 1 140px' }}
           />
           <input
             placeholder="Pos"

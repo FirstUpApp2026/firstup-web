@@ -14,11 +14,13 @@ export default function Header({ user }) {
   }
 
   return (
+
     <div
       style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
+        marginTop: 16,
         marginBottom: 24,
       }}
     >
