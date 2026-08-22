@@ -17,6 +17,10 @@ export default function LeagueQueuePage() {
   const [newPos, setNewPos] = useState('')
   const [newBid, setNewBid] = useState('')
   const [dragIndex, setDragIndex] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [selectedPlayer, setSelectedPlayer] = useState(null)
+  const [freeAgents, setFreeAgents] = useState([])
   const [user, setUser] = useState(null)
 
   async function loadData() {
@@ -34,7 +38,8 @@ export default function LeagueQueuePage() {
       .from('teams')
       .select('*')
       .eq('league_id', id)
-      .single()
+      .eq('user_id', userData.user.id)
+      .maybeSingle()   
     setTeam(teamData)
 
     if (teamData) {
@@ -52,6 +57,38 @@ export default function LeagueQueuePage() {
   useEffect(() => {
     if (id) loadData()
   }, [id])
+  useEffect(() => {
+    async function loadFreeAgents() {
+      if (!league || league.platform !== 'espn') return
+      const { data: userData } = await supabase.auth.getUser()
+      if (!userData.user) return
+      const res = await fetch('/api/espn/free-agents?user_id=' + userData.user.id + '&espn_league_id=' + league.yahoo_league_key)
+      const json = await res.json()
+      if (json.players) setFreeAgents(json.players)
+    }
+    loadFreeAgents()
+  }, [league])
+
+  function handleSearchChange(value) {
+    setSearchQuery(value)
+    setSelectedPlayer(null)
+    if (!value.trim()) {
+      setSearchResults([])
+      return
+    }
+    const matches = freeAgents.filter(function (p) {
+      return p.name.toLowerCase().includes(value.toLowerCase())
+    }).slice(0, 6)
+    setSearchResults(matches)
+  }
+
+  function selectPlayer(player) {
+    setSelectedPlayer(player)
+    setSearchQuery(player.name)
+    setSearchResults([])
+    setNewName(player.name)
+    setNewPos(player.position)
+  }
 
   async function addPlayer(e) {
     e.preventDefault()
@@ -80,6 +117,8 @@ export default function LeagueQueuePage() {
     setNewName('')
     setNewPos('')
     setNewBid('')
+    setSearchQuery('')
+    setSelectedPlayer(null)
 
     const { data } = await supabase
       .from('queue_entries')
@@ -257,29 +296,68 @@ export default function LeagueQueuePage() {
         )}
 
         <h2 style={sectionHeaderStyle}>Add a player</h2>
-        <form onSubmit={addPlayer} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <input
-            placeholder="Player name"
-            value={newName}
-            onChange={function (e) { setNewName(e.target.value) }}
-            style={{ ...inputStyle, flex: '1 1 140px' }}
-          />
-          <input
-            placeholder="Pos"
-            value={newPos}
-            onChange={function (e) { setNewPos(e.target.value) }}
-            style={{ ...inputStyle, width: 60 }}
-          />
-          <input
-            placeholder="Bid ($)"
-            value={newBid}
-            onChange={function (e) { setNewBid(e.target.value) }}
-            style={{ ...inputStyle, width: 70 }}
-          />
-          <button type="submit" style={{ ...buttonPrimaryStyle, padding: '8px 16px' }}>
-            Add
-          </button>
+        <form onSubmit={addPlayer}>
+          <div style={{ position: 'relative', marginBottom: 10 }}>
+            {selectedPlayer ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#141B24', border: '1px solid #1B232D', borderRadius: 8, padding: '8px 10px' }}>
+                <span style={{ fontSize: 14 }}>{selectedPlayer.name}</span>
+                {selectedPlayer.position && (
+                  <span style={{ fontSize: 11, fontWeight: 700, color: colors.accent, border: '1px solid ' + colors.accent, borderRadius: 4, padding: '0 5px' }}>
+                    {selectedPlayer.position}
+                  </span>
+                )}
+                <span
+                  onClick={function () { setSelectedPlayer(null); setSearchQuery(''); setNewName(''); setNewPos('') }}
+                  style={{ marginLeft: 'auto', fontSize: 12, color: colors.textFaint, cursor: 'pointer' }}
+                >
+                  &times;
+                </span>
+              </div>
+            ) : (
+              <input
+                placeholder={league.platform === 'espn' ? 'Search player name' : 'Player name'}
+                value={searchQuery}
+                onChange={function (e) { handleSearchChange(e.target.value) }}
+                style={{ ...inputStyle, width: '100%', boxSizing: 'border-box', textTransform: 'capitalize' }}
+              />
+            )}
+            {searchResults.length > 0 && (
+              <div style={{ position: 'absolute', left: 0, right: 0, top: 42, background: '#141B24', border: '1px solid #1B232D', borderRadius: 8, overflow: 'hidden', zIndex: 10 }}>
+                {searchResults.map(function (p) {
+                  return (
+                    <div
+                      key={p.id}
+                      onClick={function () { selectPlayer(p) }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderBottom: '1px solid #1B232D', cursor: 'pointer' }}
+                    >
+                      <span style={{ fontSize: 14 }}>{p.name}</span>
+                      <span style={{ fontSize: 12, color: colors.textMuted }}>{p.position}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          {league.uses_faab ? (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                placeholder="Bid ($)"
+                value={newBid}
+                onChange={function (e) { setNewBid(e.target.value) }}
+                style={{ ...inputStyle, flex: 1 }}
+              />
+              <button type="submit" style={{ ...buttonPrimaryStyle, flex: 1 }}>
+                Add
+              </button>
+            </div>
+          ) : (
+            <button type="submit" style={{ ...buttonPrimaryStyle, width: '100%' }}>
+              Add
+            </button>
+          )}
         </form>
+
       </div>
     </div>
   )

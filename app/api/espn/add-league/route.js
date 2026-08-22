@@ -20,7 +20,7 @@ export async function POST(request) {
     return Response.json({ error: 'No ESPN connection found for this user' }, { status: 400 })
   }
 
-  const espnUrl = 'https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/2026/segments/0/leagues/' + espnLeagueId + '?view=mTeam'
+  const espnUrl = 'https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/2026/segments/0/leagues/' + espnLeagueId + '?view=mTeam&view=mSettings'
 
   const espnRes = await fetch(espnUrl, {
     headers: {
@@ -34,6 +34,9 @@ export async function POST(request) {
 
   const espnData = await espnRes.json()
 
+  const acquisitionType = espnData.settings?.acquisitionSettings?.acquisitionType
+  const usesFaab = acquisitionType === 'WAIVER_BUDGET'
+
   const { data: league, error: leagueError } = await supabaseAdmin
     .from('leagues')
     .insert({
@@ -42,6 +45,7 @@ export async function POST(request) {
       name: leagueName,
       sport: 'nfl',
       platform: 'espn',
+      uses_faab: usesFaab,
     })
     .select()
     .single()
@@ -50,14 +54,20 @@ export async function POST(request) {
     return Response.json({ error: leagueError.message }, { status: 500 })
   }
 
+  function normalizeSwid(swid) {
+    return (swid || '').replace(/[{}]/g, '').toLowerCase()
+  }
+
   const teamRows = espnData.teams.map(function (t) {
     const name = t.name || ((t.location || '') + ' ' + (t.nickname || '')).trim() || 'Team ' + t.id
+    const isYourTeam = normalizeSwid(t.primaryOwner) === normalizeSwid(connection.swid)
     return {
       league_id: league.id,
       yahoo_team_key: String(t.id),
       team_name: name,
+      user_id: isYourTeam ? userId : null,
     }
-  })
+  }) 
 
   const { error: teamsError } = await supabaseAdmin
     .from('teams')
