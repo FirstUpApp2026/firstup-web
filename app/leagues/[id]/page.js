@@ -22,7 +22,7 @@ export default function LeagueQueuePage() {
   const [selectedPlayer, setSelectedPlayer] = useState(null)
   const [freeAgents, setFreeAgents] = useState([])
   const [toastVisible, setToastVisible] = useState(false)
-
+  const [duplicateError, setDuplicateError] = useState('')
   function showSavedToast() {
     setToastVisible(true)
     setTimeout(function () { setToastVisible(false) }, 2000)
@@ -105,6 +105,15 @@ export default function LeagueQueuePage() {
   async function addPlayer(e) {
     e.preventDefault()
     if (!newName.trim() || !team) return
+
+    const alreadyQueued = queue.some(function (entry) {
+      return entry.player_name.trim().toLowerCase() === newName.trim().toLowerCase()
+    })
+    if (alreadyQueued) {
+      setDuplicateError(newName.trim() + ' is already in your queue.')
+      return
+    }
+    setDuplicateError('')
 
     const tempId = 'temp-' + Date.now()
     const bidValue = newBid.trim() ? Number(newBid) : null
@@ -295,7 +304,7 @@ export default function LeagueQueuePage() {
                         >
                           {entry.position}
                         </span>
-                      )}
+                    )}
                       {entry.bid_amount != null && (
                         <span style={{ fontSize: 11, color: '#8A94A3' }}>${entry.bid_amount}</span>
                       )}
@@ -374,6 +383,9 @@ export default function LeagueQueuePage() {
             </button>
           )}
         </form>
+        {duplicateError && (
+          <p style={{ marginTop: 8, color: colors.danger, fontSize: 13 }}>{duplicateError}</p>
+        )}
 
       </div>
       {toastVisible && (
