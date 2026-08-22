@@ -23,6 +23,7 @@ export default function LeagueQueuePage() {
   const [freeAgents, setFreeAgents] = useState([])
   const [toastVisible, setToastVisible] = useState(false)
   const [duplicateError, setDuplicateError] = useState('')
+  const [notAuthorized, setNotAuthorized] = useState(false)
   function showSavedToast() {
     setToastVisible(true)
     setTimeout(function () { setToastVisible(false) }, 2000)
@@ -38,6 +39,13 @@ export default function LeagueQueuePage() {
       .select('*')
       .eq('id', id)
       .single()
+
+    if (!leagueData || leagueData.user_id !== userData.user.id) {
+      setLoading(false)
+      setNotAuthorized(true)
+      return
+    }
+
     setLeague(leagueData)
 
     const { data: teamData } = await supabase
@@ -226,7 +234,13 @@ export default function LeagueQueuePage() {
       </div>
     )
   }
-
+  if (notAuthorized) {
+    return (
+      <div style={pageStyle}>
+        <p style={{ padding: 40 }}>You don't have access to this league.</p>
+      </div>
+    )
+  }
   return (
     <div style={pageStyle}>
       <div style={containerStyle}>
