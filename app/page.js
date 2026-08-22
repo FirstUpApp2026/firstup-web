@@ -35,6 +35,7 @@ export default function HomePage() {
         .from('leagues')
         .select('*')
         .eq('user_id', userData.user.id)
+        .neq('platform', 'sleeper')
 
       const leagueIds = (leagueData || []).map(function (l) { return l.id })
 
@@ -153,9 +154,6 @@ export default function HomePage() {
                   </button>
                 </a>
               </div>
-              <button style={{ ...buttonSecondaryStyle, width: '100%', opacity: 0.5, cursor: 'not-allowed' }} disabled>
-                Connect sleeper Account (Coming Soon)
-              </button>
             </div>
           </>
         ) : (
