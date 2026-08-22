@@ -125,12 +125,13 @@ export default function LeagueQueuePage() {
       })
       if (insertIndex === -1) insertIndex = queue.length
     }
-
     const optimisticEntry = {
       id: tempId,
       player_name: newName,
       position: newPos,
       bid_amount: bidValue,
+      player_team: selectedPlayer ? selectedPlayer.team : null,
+      player_image_url: selectedPlayer ? selectedPlayer.imageUrl : null,
     }
     const newQueue = [...queue]
     newQueue.splice(insertIndex, 0, optimisticEntry)
@@ -151,6 +152,8 @@ export default function LeagueQueuePage() {
         rank: insertIndex + 1,
         bid_amount: bidValue,
         status: 'pending',
+        player_team: optimisticEntry.player_team,
+        player_image_url: optimisticEntry.player_image_url,
       })
       .select()
       .single()
@@ -288,9 +291,20 @@ export default function LeagueQueuePage() {
                   >
                     {i + 1}
                   </div>
+                  {entry.player_image_url && (
+                    <img
+                      src={entry.player_image_url}
+                      alt=""
+                      style={{ width: 28, height: 28, borderRadius: 6, objectFit: 'cover', background: '#1B232D', flexShrink: 0 }}
+                      onError={function (e) { e.target.style.display = 'none' }}
+                    />
+                  )}
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span style={{ fontWeight: 600 }}>{entry.player_name}</span>
+                      {entry.player_team && (
+                        <span style={{ fontSize: 12, color: '#8A94A3' }}>{entry.player_team}</span>
+                      )}
                       {entry.position && (
                         <span
                           style={{
@@ -326,7 +340,18 @@ export default function LeagueQueuePage() {
           <div style={{ position: 'relative', marginBottom: 10 }}>
             {selectedPlayer ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#141B24', border: '1px solid #1B232D', borderRadius: 8, padding: '8px 10px' }}>
+                {selectedPlayer.imageUrl && (
+                  <img
+                    src={selectedPlayer.imageUrl}
+                    alt=""
+                    style={{ width: 24, height: 24, borderRadius: 6, objectFit: 'cover', background: '#1B232D', flexShrink: 0 }}
+                    onError={function (e) { e.target.style.display = 'none' }}
+                  />
+                )}
                 <span style={{ fontSize: 14 }}>{selectedPlayer.name}</span>
+                {selectedPlayer.team && (
+                  <span style={{ fontSize: 12, color: colors.textMuted }}>{selectedPlayer.team}</span>
+                )}
                 {selectedPlayer.position && (
                   <span style={{ fontSize: 11, fontWeight: 700, color: colors.accent, border: '1px solid ' + colors.accent, borderRadius: 4, padding: '0 5px' }}>
                     {selectedPlayer.position}
@@ -354,10 +379,20 @@ export default function LeagueQueuePage() {
                     <div
                       key={p.id}
                       onClick={function () { selectPlayer(p) }}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderBottom: '1px solid #1B232D', cursor: 'pointer' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderBottom: '1px solid #1B232D', cursor: 'pointer' }}
                     >
-                      <span style={{ fontSize: 14 }}>{p.name}</span>
-                      <span style={{ fontSize: 12, color: colors.textMuted }}>{p.position}</span>
+                      {p.imageUrl && (
+                        <img
+                          src={p.imageUrl}
+                          alt=""
+                          style={{ width: 28, height: 28, borderRadius: 6, objectFit: 'cover', background: '#1B232D', flexShrink: 0 }}
+                          onError={function (e) { e.target.style.display = 'none' }}
+                        />
+                      )}
+                      <span style={{ fontSize: 14, flex: 1 }}>{p.name}</span>
+                      <span style={{ fontSize: 12, color: colors.textMuted }}>
+                        {p.team ? p.team + ' \u00b7 ' : ''}{p.position}
+                      </span>
                     </div>
                   )
                 })}

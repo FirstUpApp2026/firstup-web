@@ -46,10 +46,15 @@ export async function GET(request) {
     })
     if (eligiblePositions.length === 0) continue
     if (query && !p.full_name.toLowerCase().includes(query)) continue
+    const isDefense = eligiblePositions.includes('DEF')
     matches.push({
       id: id,
       name: p.full_name,
       position: eligiblePositions.join('/'),
+      team: p.team || '',
+      imageUrl: isDefense
+        ? 'https://sleepercdn.com/images/team_logos/nfl/' + (p.team || '').toLowerCase() + '.png'
+        : 'https://sleepercdn.com/content/nfl/players/thumb/' + id + '.jpg',
     })
     if (matches.length >= 10) break
   }
