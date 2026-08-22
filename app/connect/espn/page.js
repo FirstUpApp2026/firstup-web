@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Header from '../../components/Header';
+import Header from '../../../components/Header';
 import {
   pageStyle,
   cardStyle,
   inputStyle,
   buttonPrimaryStyle,
-} from '../../lib/theme';
-import { supabase } from '../../lib/supabase';
+} from '../../../lib/theme';
+import { supabase } from '../../../lib/supabase';
 
 export default function ConnectEspnPage() {
   const router = useRouter();

@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '../../lib/supabase'
-import { pageStyle, containerStyle, inputStyle, buttonPrimaryStyle, colors } from '../../lib/theme'
-import Header from '../../components/Header'
+import { supabase } from '../../../../lib/supabase'
+import { pageStyle, containerStyle, inputStyle, buttonPrimaryStyle, colors } from '../../../../lib/theme'
+import Header from '../../../../components/Header'
 
 export default function AddEspnLeaguePage() {
   const [user, setUser] = useState(null)

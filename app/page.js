@@ -138,7 +138,7 @@ export default function HomePage() {
                   Connect yahoo! Account
                 </button>
               </a>
-              <a href="/connect-espn" style={{ textDecoration: 'none' }}>
+              <a href="/connect/espn" style={{ textDecoration: 'none' }}>
                 <button style={{ ...buttonSecondaryStyle, width: '100%' }}>
                   Connect ESPN Account
                 </button>
@@ -147,7 +147,7 @@ export default function HomePage() {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={colors.textMuted} strokeWidth="1.8" style={{ flexShrink: 0, marginLeft: 10 }}>
                   <path d="M6 4v9a4 4 0 0 0 4 4h8M14 13l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <a href="/add-espn-league" style={{ textDecoration: 'none', flex: 1 }}>
+                <a href="/connect/espn/add-league" style={{ textDecoration: 'none', flex: 1 }}>
                   <button style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: 13, color: colors.textMuted, background: 'transparent', border: '1px dashed ' + colors.border, borderRadius: 6, cursor: 'pointer' }}>
                     Add ESPN League
                   </button>
